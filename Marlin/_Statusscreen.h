@@ -21,6 +21,8 @@
  */
 #pragma once
 
+#define CONFIG_EXAMPLES_DIR "Creality/Ender-3/BigTreeTech SKR 1.4"
+
 /**
  * Custom Status Screen bitmap
  *
