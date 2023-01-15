@@ -109,14 +109,8 @@
   #include "../../../feature/bltouch.h"
 #endif
 
-#if EITHER(BABYSTEPPING, HAS_BED_PROBE)
-  #define HAS_ZOFFSET_ITEM 1
-  #if ENABLED(BABYSTEPPING)
-    #include "../../../feature/babystep.h"
-    #if !HAS_BED_PROBE
-      #define JUST_BABYSTEP 1
-    #endif
-  #endif
+#if ENABLED(BABYSTEPPING)
+  #include "../../../feature/babystep.h"
 #endif
 
 #if ENABLED(POWER_LOSS_RECOVERY)
@@ -197,8 +191,8 @@
 #define DWIN_UPDATE_INTERVAL             1024
 #define DWIN_REMAIN_TIME_UPDATE_INTERVAL SEC_TO_MS(20)
 
-#if HAS_MESH
-  #define BABY_Z_VAR TERN(HAS_BED_PROBE, probe.offset.z, HMI_data.ManualZOffset)
+#if HAS_MESH && HAS_BED_PROBE
+  #define BABY_Z_VAR probe.offset.z
 #else
   float z_offset = 0;
   #define BABY_Z_VAR z_offset
@@ -880,7 +874,7 @@ void update_variable() {
 bool DWIN_lcd_sd_status = false;
 
 void SetMediaAutoMount() {
-  Toogle_Chkb_Line(HMI_data.MediaAutoMount);
+  Toggle_Chkb_Line(HMI_data.MediaAutoMount);
 }
 
 inline uint16_t nr_sd_menu_items() {
@@ -1473,10 +1467,6 @@ void DWIN_HomingStart() {
 
 void DWIN_HomingDone() {
   HMI_flag.home_flag = false;
-  #if DISABLED(HAS_BED_PROBE) && EITHER(BABYSTEP_ZPROBE_OFFSET, JUST_BABYSTEP)
-    planner.synchronize();
-    babystep.add_mm(Z_AXIS, HMI_data.ManualZOffset);
-  #endif
   HMI_ReturnScreen();
 }
 
@@ -1696,7 +1686,6 @@ void DWIN_SetDataDefaults() {
   #if BOTH(INDIVIDUAL_AXIS_HOMING_SUBMENU, MESH_BED_LEVELING)
     HMI_data.z_after_homing = DEF_Z_AFTER_HOMING;
   #endif
-  IF_DISABLED(HAS_BED_PROBE, HMI_data.ManualZOffset = 0);
   #if BOTH(LED_CONTROL_MENU, HAS_COLOR_LEDS)
     TERN_(LED_COLOR_PRESETS, leds.set_default());
     ApplyLEDColor();
@@ -2047,7 +2036,7 @@ void SetLanguage() {
 }
 
 bool EnableLiveMove = false;
-void SetLiveMove() { Toogle_Chkb_Line(EnableLiveMove); }
+void SetLiveMove() { Toggle_Chkb_Line(EnableLiveMove); }
 void LiveMove() {
   planner.synchronize();
   if (!EnableLiveMove) return;
@@ -2093,7 +2082,7 @@ void SetMoveZ() { HMI_value.axis = Z_AXIS; SetPFloatOnClick(Z_MIN_POS, Z_MAX_POS
 
 #if ENABLED(POWER_LOSS_RECOVERY)
   void SetPwrLossr() {
-    Toogle_Chkb_Line(recovery.enabled);
+    Toggle_Chkb_Line(recovery.enabled);
     recovery.changed();
   }
 #endif
@@ -2119,7 +2108,7 @@ void SetMoveZ() { HMI_value.axis = Z_AXIS; SetPFloatOnClick(Z_MIN_POS, Z_MAX_POS
 
 #if ENABLED(CASE_LIGHT_MENU)
   void SetCaseLight() {
-    Toogle_Chkb_Line(caselight.on);
+    Toggle_Chkb_Line(caselight.on);
     caselight.update_enabled();
   }
   #if ENABLED(CASELIGHT_USES_BRIGHTNESS)
@@ -2155,7 +2144,7 @@ void SetMoveZ() { HMI_value.axis = Z_AXIS; SetPFloatOnClick(Z_MIN_POS, Z_MAX_POS
 
 #if ENABLED(SOUND_MENU_ITEM)
   void SetEnableSound() {
-    Toogle_Chkb_Line(ui.sound_on);
+    Toggle_Chkb_Line(ui.sound_on);
   }
 #endif
 
@@ -2179,7 +2168,7 @@ void SetMoveZ() { HMI_value.axis = Z_AXIS; SetPFloatOnClick(Z_MIN_POS, Z_MAX_POS
 
   #if ENABLED(BLTOUCH_HS_MODE)
     void SetHSMode() {
-      Toogle_Chkb_Line(bltouch.high_speed_mode);
+      Toggle_Chkb_Line(bltouch.high_speed_mode);
     }
   #endif
 
@@ -2188,7 +2177,7 @@ void SetMoveZ() { HMI_value.axis = Z_AXIS; SetPFloatOnClick(Z_MIN_POS, Z_MAX_POS
 #if HAS_FILAMENT_SENSOR
   void SetRunoutEnable() {
     runout.reset();
-    Toogle_Chkb_Line(runout.enabled);
+    Toggle_Chkb_Line(runout.enabled);
   }
   #if HAS_FILAMENT_RUNOUT_DISTANCE
     void ApplyRunoutDistance() { runout.set_runout_distance(MenuData.Value / MINUNITMULT); }
@@ -2450,7 +2439,7 @@ void TramC () { Tram(4); }
   }
 
   void SetManualTramming() {
-    Toogle_Chkb_Line(HMI_data.FullManualTramming);
+    Toggle_Chkb_Line(HMI_data.FullManualTramming);
   }
 
 #endif // HAS_BED_PROBE && HAS_MESH
